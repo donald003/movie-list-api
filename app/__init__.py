@@ -11,6 +11,9 @@ def create_app(config_class=Config):
     jwt.init_app(app)
 
     from . import models
+    from .routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
+
 
     @app.route("/health")
     def health():
