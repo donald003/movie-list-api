@@ -1,6 +1,7 @@
 from flask import Flask
 from .config import Config
 from .extensions import db, migrate, jwt
+from .routes.movies import movies_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -13,6 +14,7 @@ def create_app(config_class=Config):
     from . import models
     from .routes.auth import auth_bp
     app.register_blueprint(auth_bp)
+    app.register_blueprint(movies_bp)
 
 
     @app.route("/health")
