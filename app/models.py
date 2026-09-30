@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, DateTime, ForeignKey
 from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db
 
@@ -17,6 +17,11 @@ class User(db.Model):
         nullable=False,
     )
 
+    movies: Mapped[list["Movie"]] = relationship(
+    back_populates="user",
+    cascade="all, delete-orphan",
+    )
+
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
@@ -25,3 +30,25 @@ class User(db.Model):
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
+
+
+class Movie(db.Model):
+    __tablename__ = "movies"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    director: Mapped[str] = mapped_column(String(120), nullable=False)
+    year: Mapped[int] = mapped_column(nullable=False)
+    rating: Mapped[int | None] = mapped_column(nullable=True)   # 1–10, optional
+    watched: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    user: Mapped["User"] = relationship(back_populates="movies")
+
+    def __repr__(self) -> str:
+        return f"<Movie {self.title}>"
