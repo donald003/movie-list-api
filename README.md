@@ -82,6 +82,14 @@ python run.py
 
 `http://localhost:5000/health` → `{"status": "ok"}`
 
+## Testing
+
+Run the test suite:
+
+```bash
+pytest --cov=app --cov-report=term-missing
+```
+
 ## Design Decisions
 
 - **App factory pattern** — allows different configs for dev, test, and
