@@ -9,3 +9,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_SORT_KEYS = False
     JWT_SECRET_KEY = os.getenv("SECRET_KEY")
+    
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    JWT_SECRET_KEY = "test-secret-key-that-is-at-least-32-bytes-long"
