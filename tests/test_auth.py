@@ -13,7 +13,7 @@ def test_register_creates_user(client):
 
 def test_register_rejects_missing_fields(client):
     response = client.post("/auth/register", json={"email": "a@example.com"})
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_register_rejects_short_password(client):
@@ -21,7 +21,7 @@ def test_register_rejects_short_password(client):
         "email": "a@example.com",
         "password": "short",
     })
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_register_rejects_duplicate_email(client):
