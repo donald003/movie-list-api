@@ -7,3 +7,5 @@ PyJWT==2.15.0
 python-dotenv==1.2.3
 pytest==9.1.1
 pytest-cov==7.1.0
+flask-smorest==0.47.0
+marshmallow==4.3.1
