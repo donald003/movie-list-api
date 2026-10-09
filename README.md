@@ -83,6 +83,10 @@ python run.py
 
 `http://localhost:5000/health` → `{"status": "ok"}`
 
+6. Explore the API:
+
+Open `http://localhost:5000/docs` for interactive API documentation.
+
 ## Testing
 
 Run the test suite:
