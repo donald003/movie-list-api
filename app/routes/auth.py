@@ -1,46 +1,40 @@
-from flask import Blueprint, request
+from flask_smorest import Blueprint, abort
 from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError
 from ..extensions import db
 from ..models import User
+from ..schemas import RegisterSchema, UserSchema, LoginSchema, LoginResponseSchema
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+auth_bp = Blueprint("auth", "auth", url_prefix="/auth")
 
 
 @auth_bp.post("/register")
-def register():
-    data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
-    password = data.get("password") or ""
-
-    if not email or not password:
-        return {"error": "email and password are required"}, 400
-
-    if len(password) < 8:
-        return {"error": "password must be at least 8 characters"}, 400
-
+@auth_bp.arguments(RegisterSchema)
+@auth_bp.response(201, UserSchema)
+def register(data):
+    email = data["email"].strip().lower()
     user = User(email=email)
-    user.set_password(password)
+    user.set_password(data["password"])
 
     db.session.add(user)
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        return {"error": "email already registered"}, 409
+        abort(409, message="email already registered")
 
-    return {"id": user.id, "email": user.email}, 201
+    return {"id": user.id, "email": user.email}
 
 
 @auth_bp.post("/login")
-def login():
-    data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
-    password = data.get("password") or ""
-
+@auth_bp.arguments(LoginSchema)
+@auth_bp.response(200, LoginResponseSchema)
+def login(data):
+    email = data["email"].strip().lower()
     user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        return {"error": "invalid credentials"}, 401
+
+    if not user or not user.check_password(data["password"]):
+        abort(401, "invalid credentials")
 
     token = create_access_token(identity=str(user.id))
-    return {"access_token": token}, 200
+    return {"access_token": token}
