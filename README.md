@@ -16,6 +16,7 @@ can only access their own data.
   HTTP status codes, input validation
 - **Schema management** — Versioned migrations, so every schema change
   is a reviewable file rather than a manual SQL script
+- **API documentation** — OpenAPI 3.0 spec with interactive Swagger UI at `/docs`
 
 ## Stack
 
