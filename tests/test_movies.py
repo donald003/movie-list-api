@@ -38,7 +38,7 @@ def test_create_movie(client):
 def test_create_movie_rejects_missing_fields(client):
     auth = _auth_client(client)
     response = auth.post("/movies", json={"title": "Inception"})
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_create_movie_rejects_invalid_rating(client):
@@ -49,7 +49,7 @@ def test_create_movie_rejects_invalid_rating(client):
         "year": 2010,
         "rating": 11,
     })
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_list_movies_returns_only_own(client):
@@ -167,7 +167,7 @@ def test_update_movie_rejects_invalid_year(client):
         "title": "Inception", "director": "Nolan", "year": 2010, "rating": 9,
     }).get_json()
     response = auth.put(f"/movies/{created['id']}", json={"year": "not-a-year"})
-    assert response.status_code == 400
+    assert response.status_code == 422
     
 def test_update_movie_rejects_invalid_rating(client):
     auth = _auth_client(client)
@@ -175,4 +175,4 @@ def test_update_movie_rejects_invalid_rating(client):
         "title": "Inception", "director": "Nolan", "year": 2010, "rating": 9,
     }).get_json()
     response = auth.put(f"/movies/{created['id']}", json={"rating": 99})
-    assert response.status_code == 400
+    assert response.status_code == 422
