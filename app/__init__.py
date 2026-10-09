@@ -20,9 +20,15 @@ def create_app(config_class=Config):
     from . import models
     
     api.init_app(app)
+    api.spec.components.security_scheme(
+    "bearerAuth",
+    {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
+)
     
     from .routes.auth import auth_bp
+    from .routes.movies import movies_bp
     api.register_blueprint(auth_bp)
+    api.register_blueprint(movies_bp)
 
     @app.route("/health")
     def health():
