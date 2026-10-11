@@ -1,11 +1,22 @@
+import atexit
+import signal
+import logging
+import sys
+
 from flask import Flask
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+
 from .config import Config
 from .extensions import db, migrate, jwt, api
+
+logger = logging.getLogger(__name__)
+
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
+
     app.config["API_TITLE"] = "Movie List API"
     app.config["API_VERSION"] = "v1"
     app.config["OPENAPI_VERSION"] = "3.0.3"
@@ -17,14 +28,14 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    from . import models
-    
+    from . import models  # pylint: disable=unused-import
+
     api.init_app(app)
     api.spec.components.security_scheme(
-    "bearerAuth",
-    {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
-)
-    
+        "bearerAuth",
+        {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
+    )
+
     from .routes.auth import auth_bp
     from .routes.movies import movies_bp
     api.register_blueprint(auth_bp)
@@ -32,6 +43,24 @@ def create_app(config_class=Config):
 
     @app.route("/health")
     def health():
-        return {"status": "ok"}, 200
+        try:
+            db.session.execute(text("SELECT 1"))
+            return {"status": "ok", "database": "ok"}, 200
+        except SQLAlchemyError:
+            logger.exception("Health check failed: database unreachable")
+            return {"status": "degraded", "database": "unavailable"}, 503
+
+    
+    def _shutdown(*_args):
+        with app.app_context():
+            db.session.remove()
+            db.engine.dispose()
+
+    def _handle_sigterm(*_args):
+        _shutdown()
+        sys.exit(0)
+
+    atexit.register(_shutdown)
+    signal.signal(signal.SIGTERM, _handle_sigterm)
 
     return app
