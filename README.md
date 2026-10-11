@@ -17,20 +17,27 @@ can only access their own data.
 - **Schema management** — Versioned migrations, so every schema change
   is a reviewable file rather than a manual SQL script
 - **API documentation** — OpenAPI 3.0 spec with interactive Swagger UI at `/docs`
+- **Testing** — Integration tests covering auth flows, CRUD behavior,
+  and authorization edge cases
+- **Reliability** — Health check that queries the database, connection
+  pool configuration for self-healing after DB restarts
+- **Security** — Password hashing, rate limiting on auth endpoints
 
 ## Stack
 
 - Flask (app factory + blueprints)
 - PostgreSQL
 - SQLAlchemy + Flask-Migrate
+- Flask-Smorest (OpenAPI / Marshmallow schemas)
 - JWT (Flask-JWT-Extended)
-- Docker
+- Flask-Limiter
+- Docker (Postgres container)
 
 ## Endpoints
 
 | Method | Path             | Auth | Description                    |
 |--------|------------------|------|--------------------------------|
-| GET    | /health          | No   | Health check                   |
+| GET    | /health          | No   | Health check (queries DB)                   |
 | POST   | /auth/register   | No   | Create a user                  |
 | POST   | /auth/login      | No   | Get a JWT                      |
 | GET    | /movies          | Yes  | List current user's movies     |
@@ -38,6 +45,11 @@ can only access their own data.
 | GET    | /movies/{id}     | Yes  | Get one movie (own only)       |
 | PUT    | /movies/{id}     | Yes  | Update a movie (own only)      |
 | DELETE | /movies/{id}     | Yes  | Delete a movie (own only)      |
+
+## API Documentation
+
+Interactive API docs are available at `/docs` when the server is running.
+The OpenAPI spec is served at `/openapi.json`.
 
 ## Running Locally
 
@@ -97,14 +109,13 @@ pytest --cov=app --cov-report=term-missing
 
 ## Design Decisions
 
-- **App factory pattern** — allows different configs for dev, test, and
-  production, and avoids circular imports as the app grows.
-- **JWT over sessions** — stateless auth suits an API consumed by any
-  client (SPA, mobile, CLI) without server-side session storage.
 - **Ownership at the query level** — every movie query filters by the
   authenticated user's ID. If another user requests it, the query returns
   nothing and we respond 404 — not 403 — so we don't leak whether the
   resource exists.
+- **Schema-based validation** — request shapes are declared as Marshmallow
+  schemas rather than hand-written `if` checks. The same schema validates
+  input, documents the API, and drives Swagger UI.
 - **Migrations instead of `create_all()`** — schema changes are versioned
   and reviewable. Production deployments run `flask db upgrade`, not a
   drop-and-recreate.
