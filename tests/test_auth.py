@@ -1,3 +1,6 @@
+from app.models import User
+
+
 def test_register_creates_user(client):
     response = client.post("/auth/register", json={
         "email": "new@example.com",
@@ -62,3 +65,17 @@ def test_login_rejects_unknown_email(client):
         "password": "password123",
     })
     assert response.status_code == 401
+
+def test_password_is_hashed_not_stored(client, app):
+    client.post("/auth/register", json={
+        "email": "hash@example.com",
+        "password": "password123",
+    })
+
+    with app.app_context():
+        user = User.query.filter_by(email="hash@example.com").first()
+        assert user is not None
+        assert user.password_hash != "password123"
+        assert user.password_hash.startswith("pbkdf2:sha256") or user.password_hash.startswith("scrypt")
+        assert user.check_password("password123") is True
+        assert user.check_password("wrongpassword") is False
