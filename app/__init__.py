@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from .config import Config
-from .extensions import db, migrate, jwt, api
+from .extensions import db, migrate, jwt, api, limiter
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    limiter.init_app(app)
 
     from . import models  # pylint: disable=unused-import
 

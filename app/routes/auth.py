@@ -1,7 +1,7 @@
 from flask_smorest import Blueprint, abort
 from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError
-from ..extensions import db
+from ..extensions import db, limiter
 from ..models import User
 from ..schemas import RegisterSchema, UserSchema, LoginSchema, LoginResponseSchema
 
@@ -27,6 +27,7 @@ def register(data):
 
 
 @auth_bp.post("/login")
+@limiter.limit("5 per minute")
 @auth_bp.arguments(LoginSchema)
 @auth_bp.response(200, LoginResponseSchema)
 def login(data):
